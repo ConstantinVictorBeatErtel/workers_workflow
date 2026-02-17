@@ -122,26 +122,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ─── Category Configs ────────────────────────────────────────────────────────
-CATEGORIES = {
-    "Category A: Simple Lookup": {
-        "short": "A", "label": "Simple Questions",
-        "desc": "Questions answerable from a single section of one document.",
-        "time": "15–20 min",
-        "example_q": "What was Apple's total net sales for the three months ended September 28, 2024?",
-    },
-    "Category B: Complex Calculation": {
-        "short": "B", "label": "Complex Single-Document",
-        "desc": "Questions requiring calculation or synthesis from one document.",
-        "time": "25–35 min",
-        "example_q": "Which of Apple's reportable segments had the highest gross margin in FY 2024, and how much revenue did that segment generate?",
-    },
-    "Category C: Cross-Company Comparison": {
-        "short": "C", "label": "Multi-Document Comparison",
-        "desc": "Questions comparing across 2–3 documents / companies.",
-        "time": "40–60 min",
-        "example_q": "Among Apple, Microsoft, and Alphabet, which company spent the highest percentage of revenue on R&D in their most recent fiscal year?",
-    },
+# ─── Category Config (fixed to Category A) ──────────────────────────────────
+cat = {
+    "short": "A", "label": "Simple Questions",
+    "desc": "Questions answerable from a single section of one document.",
+    "time": "10–15 min",
+    "example_q": "What was Apple's total net sales for the three months ended September 28, 2024?",
 }
 
 # ─── Mock Data ───────────────────────────────────────────────────────────────
@@ -163,7 +149,6 @@ Gross margin: $40,040 million"""
 DEFAULTS = {
     "step": 1,
     "worker_id": "WKR-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=8)),
-    "task_type": "Category A: Simple Lookup",
     "earnings": 0.0,
     "ticker": "",
     "filing_selected": False,
@@ -183,8 +168,6 @@ for k, v in DEFAULTS.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-cat = CATEGORIES[st.session_state.task_type]
-
 # ─── Sidebar ─────────────────────────────────────────────────────────────────
 with st.sidebar:
     # DA branding
@@ -193,10 +176,10 @@ with st.sidebar:
         <span class="da-logo">DA</span>
         <span class="da-sub">Data Annotation</span>
     </div>""", unsafe_allow_html=True)
-    st.markdown("#### 📊 Financial Fact Extraction")
+    st.markdown("#### Financial Fact Extraction")
     st.divider()
 
-    st.markdown("**💰 Pay Rate:** `$20.00/hr`")
+    st.markdown("**Pay Rate:** `$20.00/hr`")
     st.markdown(
         f"""<div class="earnings-box">
             <div class="label">Session Earnings</div>
@@ -206,17 +189,11 @@ with st.sidebar:
     )
 
     st.divider()
-    st.text_input("👤 Worker ID", value=st.session_state.worker_id, disabled=True)
-    st.session_state.task_type = st.selectbox(
-        "📋 Task Type",
-        list(CATEGORIES.keys()),
-        index=list(CATEGORIES.keys()).index(st.session_state.task_type),
-    )
-    cat = CATEGORIES[st.session_state.task_type]
+    st.text_input("Worker ID", value=st.session_state.worker_id, disabled=True)
 
-    st.markdown(f"**🏷 Category:** {cat['label']}")
+    st.markdown(f"**Category:** {cat['label']}")
     st.caption(cat["desc"])
-    st.markdown(f"**⏱ Expected Time:** {cat['time']}")
+    st.markdown(f"**Expected Time:** {cat['time']}")
 
     st.divider()
     st.caption(f"Tasks completed: **{len(st.session_state.submitted_records)}**")
@@ -229,7 +206,7 @@ def qc_box(checks: list[str]):
     items = "".join(f"<li>{c}</li>" for c in checks)
     st.markdown(
         f"""<div class="qc-box">
-            <div class="qc-title">✅ Quality Checks</div>
+            <div class="qc-title">Quality Checks</div>
             <ul style="margin:0.2rem 0 0 1.2rem;padding:0">{items}</ul>
         </div>""",
         unsafe_allow_html=True,
@@ -254,12 +231,11 @@ st.markdown(f'<div class="step-bar">{pills}</div>', unsafe_allow_html=True)
 # ─── Important Rules (always visible, not collapsible) ────────────────────────
 st.markdown("""
 <div class="important-rules">
-    <div class="ir-title">📌 Important Rules</div>
+    <div class="ir-title">Important Rules</div>
     ✅ Questions must be <b>factual</b> and directly answerable from SEC filings<br>
-    ✅ Only use filings dated <b>October 2023 or later</b><br>
     ❌ No PII (personally identifiable information)<br>
     ❌ No opinions unless directly stated in filings<br>
-    ✍️ Write as if the reader will <b>never</b> see the original filing
+    ✅ Write as if the reader will <b>never</b> see the original filing
 </div>
 """, unsafe_allow_html=True)
 
@@ -268,43 +244,19 @@ st.markdown("""
 #  STEP 1 — FACT SOURCING
 # ══════════════════════════════════════════════════════════════════════════════
 if st.session_state.step == 1:
-    st.header("🔍 Step 1 — Fact Sourcing")
+    st.header("Step 1 -- Fact Sourcing")
 
     # ── Instructions — EXPANDED by default ──
-    if cat["short"] == "A":
-        with st.expander("📖 Instructions — Simple Lookup", expanded=True):
-            st.markdown("""
+    with st.expander("Instructions -- Simple Lookup", expanded=True):
+        st.markdown("""
 **What You'll Do:** Locate the financial document containing your fact.
 
-1. **Search** — Enter a stock ticker (e.g., `AAPL`, `MSFT`, `NVDA`)
-2. **Select Document** — Choose one **10-K** (Annual) or **10-Q** (Quarterly)
-3. **Check Date** — Verify filing is **October 2023 or later**
-4. **Identify Your Fact** — Find a single, clear financial fact (revenue, expense, employee count, etc.)
-5. **Document Location** — Note page number & section name
+1. **Search** -- Enter a stock ticker (e.g., `AAPL`, `MSFT`, `NVDA`)
+2. **Select Document** -- Choose one **10-K** (Annual) or **10-Q** (Quarterly)
+3. **Identify Your Fact** -- Find a single, clear financial fact (revenue, expense, employee count, etc.)
+4. **Document Location** -- Note page number & section name
 """)
-            st.info('**Example:** Fact: Apple\'s total net sales for Q4 2024 · Location: Page 23, "Condensed Consolidated Statements of Operations" · Document: Apple Inc. 10-K filed October 2024')
-    elif cat["short"] == "B":
-        with st.expander("📖 Instructions — Complex Calculation", expanded=True):
-            st.markdown("""
-**What You'll Do:** Locate a filing containing **multiple related facts** that require analysis.
-
-1. **Search** — Enter a stock ticker
-2. **Select Document** — Choose one 10-K or 10-Q (Oct 2023+)
-3. **Identify Multiple Related Facts** — e.g., segment revenues & margins, year-over-year changes
-4. **Document All Locations** — May span multiple pages/sections
-""")
-            st.info("**Example:** Facts: Apple's segment revenues and gross margins for FY 2024 · Locations: Page 23 (Net Sales by Segment) & Page 24 (Gross Margin by Segment)")
-    else:
-        with st.expander("📖 Instructions — Cross-Company Comparison", expanded=True):
-            st.markdown("""
-**What You'll Do:** Locate **2–3 financial documents** with comparable information across companies.
-
-1. **Search** — Enter first ticker, select document
-2. **Note Comparable Fact** — Identify what you'll compare (R&D, revenue, margins…)
-3. **Repeat** — Search for 2–3 companies with the **same metric**
-4. **Document All Locations** — Note where each company reports this metric
-""")
-            st.info("**Example:** Comparable Fact: R&D as % of revenue · Documents: Apple 10-K (Oct 2024), Microsoft 10-K (Jul 2024), Alphabet 10-K (Jan 2024)")
+        st.info('**Example:** Fact: Apple\'s total net sales for Q4 2024 -- Location: Page 23, "Condensed Consolidated Statements of Operations" -- Document: Apple Inc. 10-K filed October 2024')
 
     st.markdown("---")
 
@@ -313,7 +265,7 @@ if st.session_state.step == 1:
         ticker = st.text_input("Enter Ticker Symbol", placeholder="e.g. AAPL", key="ticker_input")
 
     if ticker.strip():
-        st.markdown("#### 📄 Search Result")
+        st.markdown("#### Search Result")
         st.markdown(f'<div class="doc-viewer">{MOCK_DOCUMENT_HTML}</div>', unsafe_allow_html=True)
         st.markdown("")
         if st.button("✅  Select This Filing", type="primary", use_container_width=True):
@@ -326,7 +278,6 @@ if st.session_state.step == 1:
 
     qc_box([
         "Citation includes specific page number and section name",
-        "Filing date is October 2023 or later",
         "Fact is appropriate for your category complexity",
     ])
 
@@ -335,43 +286,23 @@ if st.session_state.step == 1:
 #  STEP 2 — EXTRACTION
 # ══════════════════════════════════════════════════════════════════════════════
 elif st.session_state.step == 2:
-    st.header("📝 Step 2 — Extraction")
+    st.header("Step 2 -- Extraction")
 
-    if cat["short"] == "A":
-        with st.expander("📖 Instructions — Simple Extraction", expanded=True):
-            st.markdown("""
+    with st.expander("Instructions -- Simple Extraction", expanded=True):
+        st.markdown("""
 **What You'll Do:** Highlight the exact text or table that contains your fact.
 
-1. **Navigate to Location** — Go to the page/section from Step 1
-2. **Highlight Content** — Select the specific text, table rows, or data points
+1. **Navigate to Location** -- Go to the page/section from Step 1
+2. **Highlight Content** -- Select the specific text, table rows, or data points
    - Include row labels, column headers, and values
    - Include any necessary context (dates, units, footnotes)
-3. **Verify Citation** — Confirm page number and section are captured
+3. **Verify Citation** -- Confirm page number and section are captured
 """)
-            st.info("""**Example Snippet:**  
+        st.info("""**Example Snippet:**  
 From Apple Inc. 10-K (October 2024), Page 23, Condensed Consolidated Statements of Operations:  
 Three Months Ended September 28, 2024: Net sales: $94,930 million""")
-    elif cat["short"] == "B":
-        with st.expander("📖 Instructions — Complex Extraction", expanded=True):
-            st.markdown("""
-**What You'll Do:** Highlight **all** text and tables needed to answer your complex question.
 
-- Include **all numbers** needed for calculations
-- Include row labels, column headers, and context
-- Include any formulas or definitions mentioned
-- May span multiple pages/sections
-""")
-    else:
-        with st.expander("📖 Instructions — Multi-Document Extraction", expanded=True):
-            st.markdown("""
-**What You'll Do:** Extract comparable data from **each** document separately.
-
-- For **each company/document**: navigate, highlight, and label clearly
-- Ensure the **same type** of information is extracted from each
-- Company names, time periods, and units must be explicit
-""")
-
-    with st.expander("📄 Selected Filing — Click to review", expanded=True):
+    with st.expander("Selected Filing -- Click to review", expanded=True):
         st.markdown(f'<div class="doc-viewer">{MOCK_DOCUMENT_HTML}</div>', unsafe_allow_html=True)
 
     st.markdown("---")
@@ -385,13 +316,17 @@ Three Months Ended September 28, 2024: Net sales: $94,930 million""")
 
     col_pg, col_sec = st.columns(2)
     with col_pg:
-        page_number = st.text_input("📑 Page Number", placeholder="e.g. 23", key="page_input")
+        page_number = st.text_input("Page Number", placeholder="e.g. 23", key="page_input")
     with col_sec:
-        section_name = st.text_input("📂 Section Name", placeholder="e.g. Statements of Operations", key="section_input")
+        section_name = st.text_input("Section Name", placeholder="e.g. Statements of Operations", key="section_input")
 
     st.markdown("")
-    extract_disabled = len(snippet.strip()) == 0
-    if st.button("🚀  Extract & Proceed", type="primary", disabled=extract_disabled, use_container_width=True):
+    extract_disabled = (
+        len(snippet.strip()) == 0
+        or len(page_number.strip()) == 0
+        or len(section_name.strip()) == 0
+    )
+    if st.button("Extract & Proceed", type="primary", disabled=extract_disabled, use_container_width=True):
         st.session_state.snippet = snippet.strip()
         st.session_state.page_number = page_number.strip()
         st.session_state.section_name = section_name.strip()
@@ -400,7 +335,7 @@ Three Months Ended September 28, 2024: Net sales: $94,930 million""")
         st.rerun()
 
     if extract_disabled:
-        st.caption("⬆️ Paste a snippet above to enable the button.")
+        st.caption("Fill in all fields above (snippet, page number, section name) to proceed.")
 
     qc_box([
         "Snippet includes ALL information needed to answer the question",
@@ -414,62 +349,43 @@ Three Months Ended September 28, 2024: Net sales: $94,930 million""")
 #  STEP 3 — QUESTION GENERATION
 # ══════════════════════════════════════════════════════════════════════════════
 elif st.session_state.step == 3:
-    st.header("❓ Step 3 — Question Generation (Blind Test)")
+    st.header("Step 3 -- Question Generation (Blind Test)")
 
     st.warning(
         "The original filing is now **hidden**. Your question must be answerable "
         "**only** from the snippet you pasted in Step 2."
     )
 
-    if cat["short"] == "A":
-        with st.expander("📖 Instructions — Simple Question", expanded=True):
-            st.markdown("""
+    with st.expander("Instructions -- Simple Question", expanded=True):
+        st.markdown("""
 **What You'll Do:** Write a clear question answerable using only your snippet.
 
 - Make it **specific and unambiguous**
 - Include **company name, time period, and specific metric**
-- Don't reference the document itself (no "According to the 10-K…")
+- Don't reference the document itself (no "According to the 10-K...")
 - Verify the snippet contains everything needed to answer
 """)
-    elif cat["short"] == "B":
-        with st.expander("📖 Instructions — Complex Question", expanded=True):
-            st.markdown("""
-**What You'll Do:** Write a question requiring **calculation, comparison, or synthesis**.
 
-- Require analysis **beyond simple lookup** (margins, percentages, growth rates)
-- Question should require **2–4 steps** to solve
-- All data needed must exist in the snippet
-""")
-    else:
-        with st.expander("📖 Instructions — Comparative Question", expanded=True):
-            st.markdown("""
-**What You'll Do:** Write a question **comparing across** the companies/documents.
-
-- Ask about differences, rankings, or trends
-- **Name all companies** being compared
-- Require actual comparison (not just lookup from one company)
-""")
-
-    st.markdown("#### 📋 Your Extracted Snippet")
+    st.markdown("#### Your Extracted Snippet")
     st.code(st.session_state.snippet, language=None)
 
     st.markdown("---")
 
     question = st.text_input(
-        "✍️ Write Question",
+        "Write Question",
         placeholder=cat["example_q"],
         key="question_input",
     )
 
     question_disabled = len(question.strip()) == 0
-    if st.button("➡️  Proceed to Answer", type="primary", disabled=question_disabled, use_container_width=True):
+    if st.button("Proceed to Answer", type="primary", disabled=question_disabled, use_container_width=True):
         st.session_state.question = question.strip()
         st.session_state.question_done = True
         st.session_state.step = 4
         st.rerun()
 
     if question_disabled:
-        st.caption("⬆️ Write a question to proceed.")
+        st.caption("Write a question to proceed.")
 
     qc_box([
         "Question is grammatically correct and professionally written",
@@ -483,59 +399,42 @@ elif st.session_state.step == 3:
 #  STEP 4 — ANSWER & REASONING
 # ══════════════════════════════════════════════════════════════════════════════
 elif st.session_state.step == 4:
-    st.header("✅ Step 4 — Answer & Reasoning")
+    st.header("Step 4 -- Answer & Reasoning")
 
-
-    if cat["short"] == "A":
-        with st.expander("📖 Instructions — Simple Answer", expanded=True):
-            st.markdown("""
+    with st.expander("Instructions -- Simple Answer", expanded=True):
+        st.markdown("""
 **Reasoning Path:** Explain where to find the answer in the snippet. For simple lookups, just identify the location.
 
 **Final Answer:** Write the complete, specific answer with proper units and context.
 """)
-            st.info("""**Example Reasoning:** Direct lookup from Condensed Consolidated Statements of Operations table [Apple 10-K Oct 2024, p.23]. Locate the "Net sales" row for the three months ended September 28, 2024.  
+        st.info("""**Example Reasoning:** Direct lookup from Condensed Consolidated Statements of Operations table [Apple 10-K Oct 2024, p.23]. Locate the "Net sales" row for the three months ended September 28, 2024.  
 **Example Answer:** Apple's total net sales for the three months ended September 28, 2024 were $94,930 million.""")
-    elif cat["short"] == "B":
-        with st.expander("📖 Instructions — Complex Answer", expanded=True):
-            st.markdown("""
-**Reasoning Path:** Write out **every calculation step** with formulas. Show all intermediate results. Cite where each number came from.
-
-**Final Answer:** Include all requested information with units.
-""")
-    else:
-        with st.expander("📖 Instructions — Comparative Answer", expanded=True):
-            st.markdown("""
-**Reasoning Path:** Calculate the metric for **each company** separately. Show all formulas/steps and compare results explicitly.
-
-**Final Answer:** State which company and the specific value.
-""")
 
     st.markdown("#### Your Question")
     st.info(st.session_state.question)
 
-    st.markdown("#### 📋 Extracted Snippet")
+    st.markdown("#### Extracted Snippet")
     st.code(st.session_state.snippet, language=None)
 
     st.markdown("---")
 
     reasoning = st.text_area(
-        "🧠 Reasoning Path",
+        "Reasoning Path",
         height=140,
         placeholder="Explain where the answer is located or show step-by-step calculations. Cite page numbers and sections.",
         key="reasoning_input",
     )
 
     final_answer = st.text_input(
-        "🎯 Final Answer (include units)",
+        "Final Answer (include units)",
         placeholder="e.g. $94,930 million",
         key="answer_input",
     )
 
     submit_disabled = len(reasoning.strip()) == 0 or len(final_answer.strip()) == 0
-    if st.button("📤  Submit Task", type="primary", disabled=submit_disabled, use_container_width=True):
+    if st.button("Submit Task", type="primary", disabled=submit_disabled, use_container_width=True):
         record = {
             "worker_id": st.session_state.worker_id,
-            "task_type": st.session_state.task_type,
             "category": cat["short"],
             "timestamp": datetime.now().isoformat(),
             "ticker": st.session_state.ticker,
@@ -549,7 +448,6 @@ elif st.session_state.step == 4:
         }
         st.session_state.submitted_records.append(record)
         st.session_state.last_record = record
-        st.session_state.earnings += 5.00
         st.session_state.show_success = True
 
         for key in ["ticker", "snippet", "page_number", "section_name", "question", "reasoning", "final_answer"]:
@@ -561,24 +459,23 @@ elif st.session_state.step == 4:
         st.rerun()
 
     if submit_disabled:
-        st.caption("⬆️ Fill in both fields to submit.")
+        st.caption("Fill in both fields to submit.")
 
     qc_box([
         "Answer directly addresses the question",
         "Numbers include proper units ($, millions, %, etc.)",
         "Reasoning clearly explains where to find the information",
-        "Every calculation step is shown explicitly" if cat["short"] != "A" else "Answer is specific and complete",
+        "Answer is specific and complete",
     ])
 
 
 # ─── Success Banner ──────────────────────────────────────────────────────────
 if st.session_state.show_success and st.session_state.last_record:
     st.session_state.show_success = False
-    st.success("✅ **Task submitted successfully!** $5.00 added to your earnings.")
+    st.success("✅ **Task submitted successfully!**")
 
-    with st.expander("📋 Final Submission Checklist", expanded=False):
+    with st.expander("Final Submission Checklist", expanded=False):
         st.markdown("""
-- [x] Filing dated October 2023 or later  
 - [x] Citations include specific page numbers  
 - [x] Supporting facts snippet is complete and standalone  
 - [x] Question is answerable using only extracted facts  
@@ -586,7 +483,7 @@ if st.session_state.show_success and st.session_state.last_record:
 - [x] No PII included  
 """)
 
-    st.markdown("#### 📦 Submitted Record (JSON Preview)")
+    st.markdown("#### Submitted Record (JSON Preview)")
     st.markdown(
         f'<div class="json-preview">{json.dumps(st.session_state.last_record, indent=2)}</div>',
         unsafe_allow_html=True,
