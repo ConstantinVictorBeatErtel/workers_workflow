@@ -235,7 +235,9 @@ st.markdown("""
     ✅ Questions must be <b>factual</b> and directly answerable from SEC filings<br>
     ✅ Prompts should ask for factual information with support in the documents (no opinions, unless they are stated in the documents)<br>
     ❌ No PII (personally identifiable information) in prompts or answers<br>
-    ✅ Your answer + supporting facts will be given to <b>future evaluators</b> who will <b>never</b> read the original filing &mdash; make them self-contained
+    ✅ Your answer + supporting facts will be given to <b>future evaluators</b> who will <b>never</b> read the original filing &mdash; make them self-contained<br>
+    ❌ Do <b>not</b> reuse the same ticker/company across multiple submissions &mdash; vary your companies<br>
+    ❌ Do <b>not</b> reuse the same section of a filing across multiple submissions &mdash; explore different parts of reports
 </div>
 """, unsafe_allow_html=True)
 

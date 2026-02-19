@@ -35,6 +35,8 @@ You will write questions requiring comparison across 2-3 documents (e.g., "Which
 - **[Category C]**: Only use documents dated October 2023 or later; Select 2-3 documents (different companies OR different periods)
 - ❌ No PII (personally identifiable information) in prompts or answers
 - ❌ No opinions unless directly stated in filings
+- ❌ Do **not** reuse the same ticker/company across multiple submissions — vary your companies
+- ❌ Do **not** reuse the same section of a filing across multiple submissions — explore different parts of reports
 - ✅ Your answer + supporting facts will be given to **future evaluators** who will **never** read the original filing — make them self-contained
 - ✅ Prompts should ask for factual information with support in the documents
 
