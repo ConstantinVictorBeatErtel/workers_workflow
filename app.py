@@ -233,9 +233,9 @@ st.markdown("""
 <div class="important-rules">
     <div class="ir-title">Important Rules</div>
     ✅ Questions must be <b>factual</b> and directly answerable from SEC filings<br>
-    ❌ No PII (personally identifiable information)<br>
-    ❌ No opinions unless directly stated in filings<br>
-    ✅ Write as if the reader will <b>never</b> see the original filing
+    ✅ Prompts should ask for factual information with support in the documents (no opinions, unless they are stated in the documents)<br>
+    ❌ No PII (personally identifiable information) in prompts or answers<br>
+    ✅ Your answer + supporting facts will be given to <b>future evaluators</b> who will <b>never</b> read the original filing &mdash; make them self-contained
 </div>
 """, unsafe_allow_html=True)
 
@@ -247,14 +247,19 @@ if st.session_state.step == 1:
     st.header("Step 1 -- Fact Sourcing")
 
     # ── Instructions — EXPANDED by default ──
-    with st.expander("Instructions -- Simple Lookup", expanded=True):
+    with st.expander("Instructions -- Fact Sourcing", expanded=True):
         st.markdown("""
-**What You'll Do:** Locate the financial document containing your fact.
+**What You'll Do:** Locate the financial document(s) containing your fact(s).
 
 1. **Search** -- Enter a stock ticker (e.g., `AAPL`, `MSFT`, `NVDA`)
-2. **Select Document** -- Choose one **10-K** (Annual) or **10-Q** (Quarterly)
-3. **Identify Your Fact** -- Find a single, clear financial fact (revenue, expense, employee count, etc.)
+2. **Select Document** -- Choose a **10-K** (Annual) or **10-Q** (Quarterly) report
+3. **Identify Your Fact(s)** -- Find the financial data you need
 4. **Document Location** -- Note page number & section name
+
+**Question Categories (what you'll be writing):**
+- **Category A:** Simple questions about a single document (e.g., "What was Apple's net sales?")
+- **Category B:** Hard questions about a single document that require using multiple parts/paragraphs, inferring information, or computing numbers not directly stated (e.g., calculating a growth rate from two different tables)
+- **Category C:** Hard questions requiring information from 2 to 40 reports (e.g., comparing gross margins across competitors in the same sector)
 """)
         st.info('**Example:** Fact: Apple\'s total net sales for Q4 2024 -- Location: Page 23, "Condensed Consolidated Statements of Operations" -- Document: Apple Inc. 10-K filed October 2024')
 
@@ -288,15 +293,19 @@ if st.session_state.step == 1:
 elif st.session_state.step == 2:
     st.header("Step 2 -- Extraction")
 
-    with st.expander("Instructions -- Simple Extraction", expanded=True):
+    with st.expander("Instructions -- Extraction", expanded=True):
         st.markdown("""
-**What You'll Do:** Highlight the exact text or table that contains your fact.
+**What You'll Do:** Copy the exact text or table that contains your fact(s).
 
 1. **Navigate to Location** -- Go to the page/section from Step 1
-2. **Highlight Content** -- Select the specific text, table rows, or data points
+2. **Copy Content** -- Select the specific text, table rows, or data points
    - Include row labels, column headers, and values
    - Include any necessary context (dates, units, footnotes)
-3. **Verify Citation** -- Confirm page number and section are captured
+   - For **Category B**: gather data from multiple sections/tables within the same document
+   - For **Category C**: gather data from each of the documents you are using
+3. **Verify Citation** -- Confirm page number(s) and section(s) are captured
+
+**Why this matters:** In the future, evaluators will judge AI-generated answers to your question. They will **only** see your supporting facts and your answer -- they will **never** read the original filing. Your supporting facts must contain **everything** needed to verify the correct answer.
 """)
         st.info("""**Example Snippet:**  
 From Apple Inc. 10-K (October 2024), Page 23, Condensed Consolidated Statements of Operations:  
@@ -353,17 +362,24 @@ elif st.session_state.step == 3:
 
     st.warning(
         "The original filing is now **hidden**. Your question must be answerable "
-        "**only** from the snippet you pasted in Step 2."
+        "**only** from the supporting facts you pasted in Step 2. "
+        "Remember: future evaluators will use your facts + answer to judge an AI response -- they will never read the filing."
     )
 
-    with st.expander("Instructions -- Simple Question", expanded=True):
+    with st.expander("Instructions -- Question Generation", expanded=True):
         st.markdown("""
-**What You'll Do:** Write a clear question answerable using only your snippet.
+**What You'll Do:** Write a clear question answerable using only your supporting facts.
 
 - Make it **specific and unambiguous**
 - Include **company name, time period, and specific metric**
 - Don't reference the document itself (no "According to the 10-K...")
-- Verify the snippet contains everything needed to answer
+- **Ask for factual information only** -- no opinions, unless they are stated in the documents
+- Verify the supporting facts contain everything needed to answer
+
+**By category:**
+- **Category A:** A straightforward lookup question about one fact
+- **Category B:** A question requiring multi-step reasoning, inference, or computation from a single document
+- **Category C:** A question requiring information from multiple documents (e.g., cross-company comparison)
 """)
 
     st.markdown("#### Your Extracted Snippet")
@@ -401,11 +417,14 @@ elif st.session_state.step == 3:
 elif st.session_state.step == 4:
     st.header("Step 4 -- Answer & Reasoning")
 
-    with st.expander("Instructions -- Simple Answer", expanded=True):
+    with st.expander("Instructions -- Answer & Reasoning", expanded=True):
         st.markdown("""
-**Reasoning Path:** Explain where to find the answer in the snippet. For simple lookups, just identify the location.
+**Reasoning Path:** Explain how to arrive at the answer from the supporting facts.
+- **Category A:** Identify where the answer is located in the supporting facts
+- **Category B:** Show the step-by-step reasoning, calculations, or inference used
+- **Category C:** Explain which facts from which documents you combined and how
 
-**Final Answer:** Write the complete, specific answer with proper units and context.
+**Final Answer:** Write the complete, specific answer with proper units and context. This answer will be provided to future evaluators as the ground truth for judging AI-generated responses.
 """)
         st.info("""**Example Reasoning:** Direct lookup from Condensed Consolidated Statements of Operations table [Apple 10-K Oct 2024, p.23]. Locate the "Net sales" row for the three months ended September 28, 2024.  
 **Example Answer:** Apple's total net sales for the three months ended September 28, 2024 were $94,930 million.""")
